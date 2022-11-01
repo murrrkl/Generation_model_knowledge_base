@@ -16,11 +16,18 @@ class Table(Frame):
         table["columns"] = headings
         table["displaycolumns"] = headings
 
+        global w
+        i = 0
         for head in headings:
+            if i > 0 and w != 30:
+                w = 130
+
+            i += 1
             table.heading(head, text=head, anchor=CENTER)
-            table.column(head, width = w, anchor=CENTER)
+            table.column(head, width=w, anchor=CENTER)
 
         for row in rows:
+
             table.insert('', END, values=tuple(row))
 
         scrolltable = Scrollbar(self, command=table.yview)
@@ -30,7 +37,7 @@ class Table(Frame):
 
 root = Tk()
 root.title("Генерация модельной базы знаний")
-root.geometry("1200x800")
+root.geometry("1300x800")
 root["bg"] = "AliceBlue"
 
 conn = sqlite3.connect('mbz.db')
@@ -50,8 +57,6 @@ MIN_DURATION_PERIOD = 1
 MAX_DURATION_PERIOD = 24
 
 
-
-
 # Функции
 def gen_classes():
     global COUNT_CLASS
@@ -63,15 +68,14 @@ def gen_classes():
         cur.execute('INSERT INTO classes(ID, name_class) VALUES(?, ?)', (str(i), name_class,))
         conn.commit()
 
-        with sqlite3.connect('mbz.db') as connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT * FROM classes")
-            data = (row for row in cursor.fetchall())
 
-        global w
-        w = 100
-        table = Table(root, headings=('ID', 'Название класса'), rows=data)
-        table.grid(row = 2, columnspan = 2, padx = 2, pady = 20)
+    cur.execute("SELECT * FROM classes")
+    data = (row for row in cur.fetchall())
+
+    global w
+    w = 31
+    table = Table(root, headings=('ID', 'Название класса'), rows=data)
+    table.grid(row = 2, columnspan = 2, padx = 2, pady = 20)
 
 def gen_features():
     global COUNT_FEATURES
@@ -83,15 +87,84 @@ def gen_features():
         cur.execute('INSERT INTO features(ID, name_features) VALUES(?, ?)', (str(i), name_features,))
         conn.commit()
 
-        with sqlite3.connect('mbz.db') as connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT * FROM features")
-            data = (row for row in cursor.fetchall())
 
-        global w
-        w = 120
-        table = Table(root, headings=('ID', 'Название признака'), rows=data)
-        table.grid(row = 2, column = 2, columnspan = 2, padx = 2, pady = 20)
+    cur.execute("SELECT * FROM features")
+    data = (row for row in cur.fetchall())
+
+    global w
+    w = 31
+    table = Table(root, headings=('ID', 'Название признака'), rows=data)
+    table.grid(row = 2, column = 2, columnspan = 2, padx = 2, pady = 20)
+
+def generate_all_features_value():
+    global COUNT_FEATURES
+    global cur
+    global conn
+
+    cur = cur.execute('SELECT * FROM features_count')
+    rows = cur.fetchall()
+
+    for row in rows:
+        count_all = row[1]
+        count_normal = row[2]
+        for j in range(1, count_all + 1):
+            name_feature = "feature" + str(row[0])
+            name_value = "value" + str(j)
+            cur1 = conn.cursor()
+            cur1.execute('INSERT INTO features_all_value(name_features, feature_value) VALUES(?, ?)', (name_feature, name_value,))
+            conn.commit()
+
+        for i in range(1, count_normal + 1):
+            name_feature = "feature" + str(row[0])
+            name_value = "value" + str(i)
+            cur1 = conn.cursor()
+            cur1.execute('INSERT INTO features_normal_value(name_features, feature_value) VALUES(?, ?)', (name_feature, name_value,))
+            conn.commit()
+
+    conn.commit()
+
+    cur.execute("SELECT * FROM features_all_value")
+    data = (row for row in cur.fetchall())
+
+    global w
+    w = 120
+    table = Table(root, headings=('Название признака', 'ВЗ'), rows=data)
+    table.grid(row=2, column=5, columnspan=2, padx=2, pady=20)
+
+
+    cur.execute("SELECT * FROM features_normal_value")
+    data = (row for row in cur.fetchall())
+
+    table = Table(root, headings=('Название признака', 'НЗ'), rows=data)
+    table.grid(row=2, column=7, columnspan=2, padx=2, pady=20)
+
+
+
+def generate_features_value():
+    global COUNT_FEATURES
+    global MIN_COUNT_VALUES_FEATURES
+    global MAX_COUNT_VALUES_FEATURES
+    global cur
+    global conn
+
+    MAX_COUNT_VALUES_FEATURES = int(e3.get())
+
+    for i in range(1, COUNT_FEATURES + 1):
+        all = randint(MIN_COUNT_VALUES_FEATURES, MAX_COUNT_VALUES_FEATURES)
+        normal = randint(1, all - 1)
+        cur.execute('INSERT INTO features_count(ID, all_features, normal_features_count) VALUES(?, ?, ?)', (str(i), all, normal,))
+        conn.commit()
+
+
+    cur.execute("SELECT * FROM features_count")
+    data = (row for row in cur.fetchall())
+
+    global w
+    w = 30
+    table = Table(root, headings=('ID', 'ВЗ', 'НЗ'), rows=data)
+    table.grid(row = 2, column = 3, columnspan = 2, padx = 2, pady = 20)
+
+    generate_all_features_value()
 
 
 
@@ -106,22 +179,29 @@ def Generate():
 
     # Удаление и повторное создание таблицы c классами
     cur.execute('DROP table if exists classes')
-    conn.commit()
-
     cur.execute("CREATE TABLE classes(ID integer, name_class text)")
-    conn.commit()
 
     # Удаление и повторное создание таблицы c признаками
     cur.execute('DROP table if exists features')
-    conn.commit()
-
     cur.execute("CREATE TABLE features (ID integer, name_features text)")
+
+    # Удаление и повторное создание количества возможных и нормальных значений
+    cur.execute('DROP table if exists features_count')
+    cur.execute("CREATE TABLE features_count (ID integer, all_features integer, normal_features_count integer)")
+
+    # Удаление и повторное создание возможных значений
+    cur.execute('DROP table if exists features_all_value')
+    cur.execute("CREATE TABLE features_all_value (name_features text, feature_value text)")
+
+    # Удаление и повторное создание номральных значений
+    cur.execute('DROP table if exists features_normal_value')
+    cur.execute("CREATE TABLE features_normal_value (name_features text, feature_value text)")
+    
     conn.commit()
 
     gen_classes()
     gen_features()
-
-
+    generate_features_value()
 
 
 
