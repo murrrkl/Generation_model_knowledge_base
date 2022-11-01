@@ -63,6 +63,8 @@ def gen_classes():
     global conn
     global cur
 
+    COUNT_CLASS = int(e1.get())
+
     for i in range(1, COUNT_CLASS + 1):
         name_class = "class" + str(i)
         cur.execute('INSERT INTO classes(ID, name_class) VALUES(?, ?)', (str(i), name_class,))
@@ -81,6 +83,8 @@ def gen_features():
     global COUNT_FEATURES
     global conn
     global cur
+
+    COUNT_FEATURES = int(e2.get())
 
     for i in range(1, COUNT_FEATURES + 1):
         name_features = "feature" + str(i)
@@ -138,8 +142,6 @@ def generate_all_features_value():
     table = Table(root, headings=('Название признака', 'НЗ'), rows=data)
     table.grid(row=2, column=7, columnspan=2, padx=2, pady=20)
 
-
-
 def generate_features_value():
     global COUNT_FEATURES
     global MIN_COUNT_VALUES_FEATURES
@@ -166,16 +168,36 @@ def generate_features_value():
 
     generate_all_features_value()
 
+def generate_periods():
+    global cur
+    global conn
+    global MAX_COUNT_PERIOD
+    global COUNT_CLASS
+    global COUNT_FEATURES
+
+    MAX_COUNT_PERIOD = int(e4.get())
+
+    for i in range(1, COUNT_CLASS + 1):
+        class_name = "class" + str(i)
+        for j in range(1, COUNT_FEATURES + 1):
+            feature_name = "feature" + str(j)
+            periods = randint(MIN_COUNT_PERIOD, MAX_COUNT_PERIOD)
+            cur.execute('INSERT INTO periods_count(name_class, name_feature, count) VALUES(?, ?, ?)', (class_name, feature_name, periods,))
+
+    conn.commit()
+
+    cur.execute("SELECT * FROM periods_count")
+    data = (row for row in cur.fetchall())
+
+    global w
+    w = 120
+    table = Table(root, headings=('Название класса', 'Название признака', 'ЧПД'), rows=data)
+    table.grid(row = 3, column = 0, columnspan = 4, pady = 10)
 
 
 def Generate():
-    global COUNT_CLASS
-    global COUNT_FEATURES
     global cur
     global conn
-
-    COUNT_CLASS = int(e1.get())
-    COUNT_FEATURES = int(e2.get())
 
     # Удаление и повторное создание таблицы c классами
     cur.execute('DROP table if exists classes')
@@ -193,15 +215,23 @@ def Generate():
     cur.execute('DROP table if exists features_all_value')
     cur.execute("CREATE TABLE features_all_value (name_features text, feature_value text)")
 
-    # Удаление и повторное создание номральных значений
+    # Удаление и повторное создание нормальных значений
     cur.execute('DROP table if exists features_normal_value')
     cur.execute("CREATE TABLE features_normal_value (name_features text, feature_value text)")
-    
+
+    # Удаление и повторное создание ЧПД признаков
+    cur.execute('DROP table if exists periods_count')
+    cur.execute("CREATE TABLE periods_count (name_class text, name_feature text, count integer)")
+
     conn.commit()
 
     gen_classes()
     gen_features()
     generate_features_value()
+    generate_periods()
+
+
+
 
 
 
@@ -226,7 +256,7 @@ e3 = Entry(width=5, font="Times 12")
 l3.grid(row=0, column=4)
 e3.grid(row=0, column=5, pady=10, padx=10)
 
-l4 = Label(text="Ограничение на число \n периодов в динамики:", font="Times 12", bg="AliceBlue")
+l4 = Label(text="Ограничение на число \n периодов динамики:", font="Times 12", bg="AliceBlue")
 e4 = Entry(width=5, font="Times 12")
 
 l4.grid(row=0, column=6)
