@@ -44,7 +44,7 @@ cur = conn.cursor()
 COUNT_IBZ = 0
 COUNT_CLASS = 0
 COUNT_IBZ_CLASS = 0
-ID = 0
+ID = 1
 
 conn = sqlite3.connect('mvd.db')
 cur = conn.cursor()
@@ -61,10 +61,28 @@ def generation_IBZ():
     print(COUNT_CLASS)
 
     for i in range(1, COUNT_CLASS + 1):
+
         for j in range(1, COUNT_IBZ_CLASS + 1):
+            conn3 = sqlite3.connect('mbz.db')
+            cur3 = conn3.cursor()
+            cur3 = cur3.execute('SELECT * FROM periods_values')
+            rows = cur3.fetchall()
+            class_name = "class" + str(i)
+            feature_name = ""
+            num_period = 0
+
+            for row in rows:
+                if row[0] == class_name:
+                    feature_name = row[1]
+                    num_period = row[2]
+                    print("ID =", ID, end=" ")
+                    print("Класс =", class_name, end=" ")
+                    print("Признак =", feature_name, end=" ")
+                    print("Период =", num_period)
+
+
+
             ID += 1
-            print("ID = ", ID)
-            print("Класс = ", i)
 
 
 
