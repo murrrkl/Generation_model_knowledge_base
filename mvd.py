@@ -70,21 +70,20 @@ def generation_IBZ():
             class_name = "class" + str(i)
             feature_name = ""
             num_period = 0
+            time_period = 0
 
             for row in rows:
                 if row[0] == class_name:
                     feature_name = row[1]
                     num_period = row[2]
+                    time_period = randint(row[4], row[5])
                     print("ID =", ID, end=" ")
                     print("Класс =", class_name, end=" ")
                     print("Признак =", feature_name, end=" ")
-                    print("Период =", num_period)
-
-
+                    print("Период =", num_period, end = " ")
+                    print("Длительность =", time_period)
 
             ID += 1
-
-
 
 def click_gen_IBZ():
     global COUNT_IBZ
