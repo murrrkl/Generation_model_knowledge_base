@@ -19,8 +19,8 @@ class Table(Frame):
         global w
         i = 0
         for head in headings:
-            if i > 0 and w != 30:
-                w = 130
+            if i > 0 and w != 30 and w != 100:
+                w = 60
 
             i += 1
             table.heading(head, text=head, anchor=CENTER)
@@ -76,8 +76,8 @@ def gen_classes():
 
     global w
     w = 31
-    table = Table(root, headings=('ID', 'Название класса'), rows=data)
-    table.grid(row = 2, columnspan = 2, padx = 2, pady = 20)
+    table = Table(root, headings=('ID', 'Класс'), rows=data)
+    table.grid(row = 2, column= 0, columnspan = 2,padx = 2, pady = 20)
 
 def gen_features():
     global COUNT_FEATURES
@@ -97,7 +97,7 @@ def gen_features():
 
     global w
     w = 31
-    table = Table(root, headings=('ID', 'Название признака'), rows=data)
+    table = Table(root, headings=('ID', 'Признак'), rows=data)
     table.grid(row = 2, column = 2, columnspan = 2, padx = 2, pady = 20)
 
 def generate_all_features_value():
@@ -112,15 +112,15 @@ def generate_all_features_value():
         count_all = row[1]
         count_normal = row[2]
         for j in range(1, count_all + 1):
-            name_feature = "feature" + str(row[0])
-            name_value = "value" + str(j)
+            name_feature = row[0]
+            name_value = str(j)
             cur1 = conn.cursor()
             cur1.execute('INSERT INTO features_all_value(name_features, feature_value) VALUES(?, ?)', (name_feature, name_value,))
             conn.commit()
 
         for i in range(1, count_normal + 1):
-            name_feature = "feature" + str(row[0])
-            name_value = "value" + str(i)
+            name_feature = row[0]
+            name_value = str(i)
             cur1 = conn.cursor()
             cur1.execute('INSERT INTO features_normal_value(name_features, feature_value) VALUES(?, ?)', (name_feature, name_value,))
             conn.commit()
@@ -131,18 +131,18 @@ def generate_all_features_value():
     data = (row for row in cur.fetchall())
 
     global w
-    w = 120
-    table = Table(root, headings=('Название признака', 'ВЗ'), rows=data)
-    table.grid(row=2, column=5, columnspan=2, padx=2, pady=20)
+    w = 60
+    table = Table(root, headings=('Признак', 'ВЗ'), rows=data)
+    table.grid(row=2, column=4, columnspan = 2, padx=2, pady=20)
 
 
     cur.execute("SELECT * FROM features_normal_value")
     data = (row for row in cur.fetchall())
 
-    table = Table(root, headings=('Название признака', 'НЗ'), rows=data)
-    table.grid(row=2, column=7, columnspan=2, padx=2, pady=20)
+    table = Table(root, headings=('Признак', 'НЗ'), rows=data)
+    table.grid(row=2, column=6, columnspan = 2,  padx=2, pady=20)
 
-def generate_features_value():
+def gen_features_value():
     global COUNT_FEATURES
     global MIN_COUNT_VALUES_FEATURES
     global MAX_COUNT_VALUES_FEATURES
@@ -152,9 +152,10 @@ def generate_features_value():
     MAX_COUNT_VALUES_FEATURES = int(e3.get())
 
     for i in range(1, COUNT_FEATURES + 1):
+        feature_name = "feature" + str(i)
         all = randint(MIN_COUNT_VALUES_FEATURES, MAX_COUNT_VALUES_FEATURES)
         normal = randint(1, all - 1)
-        cur.execute('INSERT INTO features_count(ID, all_features, normal_features_count) VALUES(?, ?, ?)', (str(i), all, normal,))
+        cur.execute('INSERT INTO features_count(ID, all_features, normal_features_count) VALUES(?, ?, ?)', (feature_name, all, normal,))
         conn.commit()
 
 
@@ -162,13 +163,13 @@ def generate_features_value():
     data = (row for row in cur.fetchall())
 
     global w
-    w = 30
-    table = Table(root, headings=('ID', 'ВЗ', 'НЗ'), rows=data)
-    table.grid(row = 2, column = 3, columnspan = 2, padx = 2, pady = 20)
+    w = 60
+    table = Table(root, headings=('Признак', 'ВЗ', 'НЗ'), rows=data)
+    table.grid(row = 2, column = 8, columnspan = 2, padx = 2, pady = 20)
 
     generate_all_features_value()
 
-def generate_periods():
+def gen_periods():
     global cur
     global conn
     global MAX_COUNT_PERIOD
@@ -177,11 +178,32 @@ def generate_periods():
 
     MAX_COUNT_PERIOD = int(e4.get())
 
+    a = []
+    b = []
+    count = 0
+
+    cur_f = conn.cursor()
+    cur_f = cur.execute('SELECT * FROM features_count')
+    rs = cur_f.fetchall()
+
+    for r in rs:
+        a.append(r[0])
+        b.append(r[1])
+
     for i in range(1, COUNT_CLASS + 1):
         class_name = "class" + str(i)
         for j in range(1, COUNT_FEATURES + 1):
             feature_name = "feature" + str(j)
+
+            for i in range(0, len(a) - 1):
+                if feature_name == a[i]:
+                    count = b[i]
+
             periods = randint(MIN_COUNT_PERIOD, MAX_COUNT_PERIOD)
+
+            while periods > count:
+                periods = randint(MIN_COUNT_PERIOD, MAX_COUNT_PERIOD)
+
             cur.execute('INSERT INTO periods_count(name_class, name_feature, count) VALUES(?, ?, ?)', (class_name, feature_name, periods,))
 
     conn.commit()
@@ -190,9 +212,76 @@ def generate_periods():
     data = (row for row in cur.fetchall())
 
     global w
-    w = 120
-    table = Table(root, headings=('Название класса', 'Название признака', 'ЧПД'), rows=data)
-    table.grid(row = 3, column = 0, columnspan = 4, pady = 10)
+    w = 60
+    table = Table(root, headings=('Класс', 'Признак', 'ЧПД'), rows=data)
+    table.grid(row = 3, column = 1, columnspan = 2, pady = 5)
+
+def gen_periods_values():
+    global cur
+    global conn
+    global MAX_DURATION_PERIOD
+
+    MAX_DURATION_PERIOD = int(e5.get())
+
+    a =[]
+    b = []
+
+    cur_f = conn.cursor()
+    cur_f = cur_f.execute('SELECT * FROM features_count')
+    rs = cur_f.fetchall()
+
+    for r in rs:
+        a.append(r[0])
+        b.append(r[1])
+
+
+    count = 0
+    values = []
+
+
+    cur = cur.execute('SELECT * FROM periods_count')
+    rows = cur.fetchall()
+
+    for row in rows:
+        class_name = row[0]
+        feature_name = row[1]
+        count_periods = row[2]
+
+        for i in range(0, len(a) - 1):
+            if feature_name == a[i]:
+                count = b[i]
+
+        random_values = list(range(1, count + 1))
+        random.shuffle(random_values)
+
+        for i in range (1, count_periods + 1):
+            values = []
+            for j in range(i-1, count, count_periods):
+                values.append(random_values[j])
+
+            if count_periods == 1:
+                values = random.sample(values, count // 2)
+
+            values.sort()
+
+            values = str(values).strip('[]')
+
+            ng = randint(MIN_DURATION_PERIOD, MAX_DURATION_PERIOD - 1)
+            vg = randint(ng + 1, MAX_DURATION_PERIOD)
+
+            cur1 = conn.cursor()
+            cur1.execute('INSERT INTO periods_values(name_class, name_feature, num_periods, per_values, ng, vg) VALUES(?, ?, ?, ?, ?, ?)',
+                        (class_name, feature_name, i, values, ng, vg))
+            conn.commit()
+
+    cur.execute("SELECT * FROM periods_values")
+    data = (row for row in cur.fetchall())
+
+    global w
+    w = 100
+    table = Table(root, headings=('Класс', 'Признак', 'ПД', 'ЗПД', 'НГ', 'ВГ'), rows=data)
+    table.grid(row=3, column=3, columnspan=6, pady=5)
+
 
 
 def Generate():
@@ -223,12 +312,17 @@ def Generate():
     cur.execute('DROP table if exists periods_count')
     cur.execute("CREATE TABLE periods_count (name_class text, name_feature text, count integer)")
 
+    # Удаление и повторное создание ЧПД признаков
+    cur.execute('DROP table if exists periods_values')
+    cur.execute("CREATE TABLE periods_values (name_class text, name_feature text, num_periods integer, per_values text, ng integer, vg integer)")
+
     conn.commit()
 
     gen_classes()
     gen_features()
-    generate_features_value()
-    generate_periods()
+    gen_features_value()
+    gen_periods()
+    gen_periods_values()
 
 
 
