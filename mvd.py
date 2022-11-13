@@ -3,7 +3,10 @@
 from tkinter import *
 import tkinter.ttk as ttk
 import sqlite3
+from random import randint
+from random import choice
 
+w = 120
 
 class Table(Frame):
     def __init__(self, parent=None, headings=tuple(), rows=tuple()):
@@ -37,10 +40,6 @@ root.title("Генерация модельной выборки данных")
 root.geometry("1300x800")
 root["bg"] = "AliceBlue"
 
-conn = sqlite3.connect('mbz.db')
-cur = conn.cursor()
-
-
 COUNT_IBZ = 0
 COUNT_CLASS = 0
 COUNT_IBZ_CLASS = 0
@@ -53,12 +52,36 @@ conn_mbz = sqlite3.connect('mbz.db')
 cur_mbz = conn_mbz.cursor()
 
 # Функции
+def random_choice(mas, mas_zn, count):
+    result = mas
+    flag = False
+
+    if count <= len(mas_zn):
+        while len(result) != count:
+            while flag != True:
+                n = int(choice(mas_zn))
+                flag = True
+                for p in range(len(result)):
+                    if n == result[p]:
+                        flag = False
+
+            result.append(n)
+            flag = False
+    else:
+        while len(result) != count:
+            result.append(int(choice(mas_zn)))
+
+    return result
+
+
 def generation_IBZ():
+    global conn
+    global cur
     global COUNT_IBZ_CLASS
     global COUNT_CLASS
     global ID
 
-    print(COUNT_CLASS)
+    ID = 1
 
     for i in range(1, COUNT_CLASS + 1):
 
@@ -68,22 +91,57 @@ def generation_IBZ():
             cur3 = cur3.execute('SELECT * FROM periods_values')
             rows = cur3.fetchall()
             class_name = "class" + str(i)
-            feature_name = ""
-            num_period = 0
-            time_period = 0
 
             for row in rows:
                 if row[0] == class_name:
                     feature_name = row[1]
                     num_period = row[2]
                     time_period = randint(row[4], row[5])
-                    print("ID =", ID, end=" ")
-                    print("Класс =", class_name, end=" ")
-                    print("Признак =", feature_name, end=" ")
-                    print("Период =", num_period, end = " ")
-                    print("Длительность =", time_period)
+                    zpd = row[3]
+                    zpd_array = zpd.split(', ')
+                    mn = []
+                    zmn = []
+                    count_mn = 1
+                    n = 0
+                    flag = False
+
+                    if time_period > 2:
+                        count_mn = 3
+                    elif time_period == 2:
+                        count_mn = 2
+
+                    mn.append(randint(1, time_period))
+                    zmn.append(int(choice(zpd_array)))
+
+                    while len(mn) != count_mn:
+                        while flag != True:
+                            n = randint(1, time_period)
+                            flag = True
+                            for p in range(len(mn)):
+                                if n == mn[p]:
+                                    flag = False
+
+                        mn.append(n)
+                        flag = False
+
+                    mn.sort()
+                    zmn = random_choice(zmn, zpd_array, count_mn)
+
+                    for k in range (0, len(mn)):
+                        cur.execute(
+                            'INSERT INTO ibz(id, name_class, name_feature, num_mn, ng_per, vg_per, time_per, mn, zpd, zmn) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                            (ID, class_name, feature_name, k + 1, row[4], row[5], time_period, mn[k], zpd, zmn[k]))
+                        conn.commit()
 
             ID += 1
+    cur.execute("SELECT * FROM ibz")
+    data = (row for row in cur.fetchall())
+
+    global w
+    w = 100
+    table = Table(root, headings=('ID', 'Класс', 'Признак', '№ МН', 'НГ', 'ВГ', 'ДПД', 'МН', 'ЗПД', 'ЗМН'), rows=data)
+    table.grid(row=2, column=0, columnspan=10, pady=5)
+
 
 def click_gen_IBZ():
     global COUNT_IBZ
@@ -105,7 +163,7 @@ def click_gen_IBZ():
     # Удаление и повторное создание ЧПД признаков
     cur.execute('DROP table if exists ibz')
     cur.execute(
-        "CREATE TABLE ibz (id integer, name_class text, name_feature text, num_periods integer, time_per integer)")
+        "CREATE TABLE ibz (id integer, name_class text, name_feature text, num_mn integer, ng_per integer, vg_per integer, time_per integer, mn integer, zpd text, zmn integer)")
 
     conn.commit()
 
@@ -118,7 +176,5 @@ b_ibz = Button(root, text = "Сгенерировать", bg = "white", command 
 l_ibz.grid(row = 0, column=0, pady = 10)
 e_ibz.grid(row = 0, column=1, pady = 10)
 b_ibz.grid(row = 0, column=2, pady = 10)
-
-
 
 root.mainloop()
