@@ -91,11 +91,16 @@ def generation_IBZ():
             cur3 = cur3.execute('SELECT * FROM periods_values')
             rows = cur3.fetchall()
             class_name = "class" + str(i)
+            pred_period = 1
 
             for row in rows:
                 if row[0] == class_name:
                     feature_name = row[1]
                     num_period = row[2]
+
+                    if num_period == 1:
+                        pred_period = 1
+
                     time_period = randint(row[4], row[5])
                     zpd = row[3]
                     zpd_array = zpd.split(', ')
@@ -106,16 +111,25 @@ def generation_IBZ():
                     flag = False
 
                     if time_period > 2:
-                        count_mn = 3
+                        count_mn = randint(1, 3)
                     elif time_period == 2:
-                        count_mn = 2
+                        count_mn = randint(1, 2)
 
-                    mn.append(randint(1, time_period))
+                    if num_period == 1:
+                        mn.append(randint(1, time_period))
+                    else:
+                        mn.append(randint(pred_period + 1, pred_period + time_period))
                     zmn.append(int(choice(zpd_array)))
+
+                    #print(mn)
+                    #print(pred_period)
 
                     while len(mn) != count_mn:
                         while flag != True:
-                            n = randint(1, time_period)
+                            if num_period == 1:
+                                n = randint(1, time_period)
+                            else:
+                                n = randint(pred_period + 1, pred_period + time_period)
                             flag = True
                             for p in range(len(mn)):
                                 if n == mn[p]:
@@ -126,6 +140,10 @@ def generation_IBZ():
 
                     mn.sort()
                     zmn = random_choice(zmn, zpd_array, count_mn)
+                    if num_period == 1:
+                        pred_period = time_period
+                    else:
+                        pred_period = pred_period + time_period
 
                     for k in range (0, len(mn)):
                         cur.execute(
