@@ -88,6 +88,8 @@ def generation_IBZ():
         for j in range(1, COUNT_IBZ_CLASS + 1):
             conn3 = sqlite3.connect('mbz.db')
             cur3 = conn3.cursor()
+            conn2 = sqlite3.connect('mvd.db')
+            cur2 = conn2.cursor()
             cur3 = cur3.execute('SELECT * FROM periods_values')
             rows = cur3.fetchall()
             class_name = "class" + str(i)
@@ -110,15 +112,23 @@ def generation_IBZ():
                     n = 0
                     flag = False
 
-                    if time_period > 2:
-                        count_mn = randint(1, 3)
-                    elif time_period == 2:
+                    if time_period - row[4] > 3:
+                        count_mn = randint(1, 10)
+                        if count_mn == 9:
+                            count_mn = 3
+                        elif count_mn == 10:
+                            count_mn = 2
+                        else:
+                            count_mn = 1
+                    elif time_period-row[4] == 2:
                         count_mn = randint(1, 2)
 
                     if num_period == 1:
-                        mn.append(randint(1, time_period))
+                        mn.append(randint(row[4], time_period))
                     else:
-                        mn.append(randint(pred_period + 1, pred_period + time_period))
+                        s = randint(row[4], time_period)
+                        mn.append(pred_period + 1 + s)
+                        #mn.append(randint(pred_period + 1, pred_period + time_period))
                     zmn.append(int(choice(zpd_array)))
 
                     #print(mn)
@@ -127,9 +137,11 @@ def generation_IBZ():
                     while len(mn) != count_mn:
                         while flag != True:
                             if num_period == 1:
-                                n = randint(1, time_period)
+                                n = randint(row[4], time_period)
                             else:
-                                n = randint(pred_period + 1, pred_period + time_period)
+                                s = randint(row[4], time_period)
+                                n = pred_period + s + 1
+                                #n = randint(pred_period + 1, pred_period + time_period)
                             flag = True
                             for p in range(len(mn)):
                                 if n == mn[p]:
@@ -141,24 +153,36 @@ def generation_IBZ():
                     mn.sort()
                     zmn = random_choice(zmn, zpd_array, count_mn)
                     if num_period == 1:
-                        pred_period = time_period
+                        #pred_period = time_period
+                        pred_period = mn[len(mn) - 1]
                     else:
-                        pred_period = pred_period + time_period
+                        pred_period = mn[len(mn) - 1]
+                        #pred_period = pred_period + time_period
 
                     for k in range (0, len(mn)):
                         cur.execute(
                             'INSERT INTO ibz(id, name_class, name_feature, num_mn, ng_per, vg_per, time_per, mn, zpd, zmn) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                             (ID, class_name, feature_name, k + 1, row[4], row[5], time_period, mn[k], zpd, zmn[k]))
                         conn.commit()
+                        cur2.execute(
+                            'INSERT INTO mvd(id, name_class, name_feature, mn, zmn) VALUES(?, ?, ?, ?, ?)',
+                            (ID, class_name, feature_name, mn[k], zmn[k]))
+                        conn2.commit()
 
             ID += 1
     cur.execute("SELECT * FROM ibz")
     data = (row for row in cur.fetchall())
 
+    cur2.execute("SELECT * FROM mvd")
+    data2 = (row for row in cur2.fetchall())
+
     global w
     w = 100
     table = Table(root, headings=('ID', 'Класс', 'Признак', '№ МН', 'НГ', 'ВГ', 'ДПД', 'МН', 'ЗПД', 'ЗМН'), rows=data)
     table.grid(row=2, column=0, columnspan=10, pady=5)
+
+    table2 = Table(root, headings=('ID', 'Класс', 'Признак','МН', 'ЗМН'), rows=data2)
+    table2.grid(row=3, column=0, columnspan=10, pady=5)
 
 
 def click_gen_IBZ():
@@ -178,10 +202,16 @@ def click_gen_IBZ():
 
     COUNT_IBZ_CLASS = COUNT_IBZ // COUNT_CLASS
 
-    # Удаление и повторное создание ЧПД признаков
+    # Удаление и повторное создание ibz
     cur.execute('DROP table if exists ibz')
     cur.execute(
         "CREATE TABLE ibz (id integer, name_class text, name_feature text, num_mn integer, ng_per integer, vg_per integer, time_per integer, mn integer, zpd text, zmn integer)")
+
+    conn.commit()
+
+    # Удаление и повторное создание mvd
+    cur.execute('DROP table if exists mvd')
+    cur.execute("CREATE TABLE mvd (id integer, name_class text, name_feature text, mn integer, zmn integer)")
 
     conn.commit()
 
