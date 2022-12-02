@@ -35,7 +35,7 @@ class Table(Frame):
 
 root = Tk()
 root.title("Формирование альтернативной базы знаний")
-root.geometry("1000x800")
+root.geometry("780x800")
 root["bg"] = "AliceBlue"
 
 conn = sqlite3.connect('ifbz.db')
@@ -760,11 +760,7 @@ def two(class_name, feature_name, i, n1,v1, va1, n2, v2, va2):
     merge_ng2 = []
     merge_vg2 = []
     merge_val2 = []
-
-
     count = 0
-
-
 
     for i in range(0, len(id)):
 
@@ -883,6 +879,574 @@ def two(class_name, feature_name, i, n1,v1, va1, n2, v2, va2):
                 (class_name, feature_name, 2, str(val2).strip('[]'),  ng2, vg2))
             conn1.commit()
 
+def three(class_name, feature_name, i, n1,v1, va1, n2, v2, va2, n3, v3, va3):
+
+    conn1 = sqlite3.connect('ifbz.db')
+    cur1 = conn1.cursor()
+
+    id = i.copy()
+    ng1 = n1.copy()
+    vg1 = v1.copy()
+    val1 = va1.copy()
+    ng2 = n2.copy()
+    vg2 = v2.copy()
+    val2 = va2.copy()
+    ng3 = n3.copy()
+    vg3 = v3.copy()
+    val3 = va3.copy()
+
+    merge_id = []
+    merge_id.append(id[0])
+    merge_ng1 = []
+    merge_vg1 = []
+    merge_val1 = []
+    merge_ng2 = []
+    merge_vg2 = []
+    merge_val2 = []
+    merge_ng3 = []
+    merge_vg3 = []
+    merge_val3 = []
+    count = 0
+
+    for i in range(0, len(id)):
+
+        if id[i] == merge_id[0]:
+            merge_ng1.append(ng1[i])
+            merge_vg1.append(vg1[i])
+            merge_val1.append(val1[i])
+            merge_ng2.append(ng2[i])
+            merge_vg2.append(vg2[i])
+            merge_val2.append(val2[i])
+            merge_ng3.append(ng3[i])
+            merge_vg3.append(vg3[i])
+            merge_val3.append(val3[i])
+        else:
+            count = i
+            break
+
+    if len(id) != 1:
+        flag = True
+    else:
+        flag = False
+
+    while flag:
+
+        flag = False
+        m_ng1 = []
+        m_vg1 = []
+        m_val1 = []
+        m_ng2 = []
+        m_vg2 = []
+        m_val2 = []
+        m_ng3 = []
+        m_vg3 = []
+        m_val3 = []
+        index = 0
+        n = 0
+
+        for i in range(0, len(merge_val1)):
+            for j in range(count, len(id)):
+                if j == count:
+                    index = id[j]
+                if id[j] == index:
+
+                    v1 = merge_val1[i].copy()
+                    v1.extend(val1[j])
+                    v2 = merge_val2[i].copy()
+                    v2.extend(val2[j])
+                    v3 = merge_val3[i].copy()
+                    v3.extend(val3[j])
+
+                    v1 = list(set(v1))
+                    v2 = list(set(v2))
+                    v3 = list(set(v3))
+
+                    v1.sort()
+                    v2.sort()
+                    v3.sort()
+
+                    sovp = [x for x in v1 if x in v2]
+                    sovp1 = [x for x in v3 if x in v2]
+
+
+                    if sovp == [] and sovp1 == []:
+                        m_ng1.append(min(merge_ng1[i], ng1[j]))
+                        m_vg1.append(max(merge_vg1[i], vg1[j]))
+                        m_val1.append(v1)
+                        m_ng2.append(min(merge_ng2[i], ng2[j]))
+                        m_vg2.append(max(merge_vg2[i], vg2[j]))
+                        m_val2.append(v2)
+                        m_ng3.append(min(merge_ng3[i], ng3[j]))
+                        m_vg3.append(max(merge_vg3[i], vg3[j]))
+                        m_val3.append(v3)
+                        n = j + 1
+                        flag = True
+                else:
+                    n = j
+                    break
+
+        count = n
+        if flag == True:
+            merge_ng1 = m_ng1
+            merge_vg1 = m_vg1
+            merge_val1 = m_val1
+            merge_ng2 = m_ng2
+            merge_vg2 = m_vg2
+            merge_val2 = m_val2
+            merge_ng3 = m_ng3
+            merge_vg3 = m_vg3
+            merge_val3 = m_val3
+
+    if len(id) != 1:
+        ng1 = merge_ng1[0]
+        vg1 = merge_vg1[0]
+        val1 = merge_val1[0]
+        ng2 = merge_ng2[0]
+        vg2 = merge_vg2[0]
+        val2 = merge_val2[0]
+        ng3 = merge_ng3[0]
+        vg3 = merge_vg3[0]
+        val3 = merge_val3[0]
+
+        val1 = list(set(val1))
+        val2 = list(set(val2))
+        val3 = list(set(val3))
+
+        val1 = sorted(val1)
+        val2 = sorted(val2)
+        val3 = sorted(val3)
+
+        sovp = [x for x in val1 if x in val2]
+        sovp1 = [x for x in val3 if x in val2]
+
+        if sovp != [] or sovp1 != []:
+            id = []
+        else:
+            id = [1]
+
+        if len(id) != 0:
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 1, str(val1).strip('[]'), ng1, vg1 ))
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 2, str(val2).strip('[]'),  ng2, vg2))
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 3, str(val3).strip('[]'), ng3, vg3))
+            conn1.commit()
+
+
+def four(class_name, feature_name, i, n1,v1, va1, n2, v2, va2, n3, v3, va3, n4, v4, va4):
+
+    conn1 = sqlite3.connect('ifbz.db')
+    cur1 = conn1.cursor()
+
+    id = i.copy()
+    ng1 = n1.copy()
+    vg1 = v1.copy()
+    val1 = va1.copy()
+    ng2 = n2.copy()
+    vg2 = v2.copy()
+    val2 = va2.copy()
+    ng3 = n3.copy()
+    vg3 = v3.copy()
+    val3 = va3.copy()
+    ng4 = n4.copy()
+    vg4 = v4.copy()
+    val4 = va4.copy()
+
+    merge_id = []
+    merge_id.append(id[0])
+    merge_ng1 = []
+    merge_vg1 = []
+    merge_val1 = []
+    merge_ng2 = []
+    merge_vg2 = []
+    merge_val2 = []
+    merge_ng3 = []
+    merge_vg3 = []
+    merge_val3 = []
+    merge_ng4 = []
+    merge_vg4 = []
+    merge_val4 = []
+    count = 0
+
+    for i in range(0, len(id)):
+
+        if id[i] == merge_id[0]:
+            merge_ng1.append(ng1[i])
+            merge_vg1.append(vg1[i])
+            merge_val1.append(val1[i])
+            merge_ng2.append(ng2[i])
+            merge_vg2.append(vg2[i])
+            merge_val2.append(val2[i])
+            merge_ng3.append(ng3[i])
+            merge_vg3.append(vg3[i])
+            merge_val3.append(val3[i])
+            merge_ng4.append(ng4[i])
+            merge_vg4.append(vg4[i])
+            merge_val4.append(val4[i])
+        else:
+            count = i
+            break
+
+    if len(id) != 1:
+        flag = True
+    else:
+        flag = False
+
+    while flag:
+
+        flag = False
+        m_ng1 = []
+        m_vg1 = []
+        m_val1 = []
+        m_ng2 = []
+        m_vg2 = []
+        m_val2 = []
+        m_ng3 = []
+        m_vg3 = []
+        m_val3 = []
+        m_ng4 = []
+        m_vg4 = []
+        m_val4 = []
+        index = 0
+        n = 0
+
+        for i in range(0, len(merge_val1)):
+            for j in range(count, len(id)):
+                if j == count:
+                    index = id[j]
+                if id[j] == index:
+
+                    v1 = merge_val1[i].copy()
+                    v1.extend(val1[j])
+                    v2 = merge_val2[i].copy()
+                    v2.extend(val2[j])
+                    v3 = merge_val3[i].copy()
+                    v3.extend(val3[j])
+                    v4 = merge_val4[i].copy()
+                    v4.extend(val4[j])
+
+                    v1 = list(set(v1))
+                    v2 = list(set(v2))
+                    v3 = list(set(v3))
+                    v4 = list(set(v4))
+
+                    v1.sort()
+                    v2.sort()
+                    v3.sort()
+                    v4.sort()
+
+                    sovp = [x for x in v1 if x in v2]
+                    sovp1 = [x for x in v3 if x in v2]
+                    sovp2 = [x for x in v3 if x in v4]
+
+
+                    if sovp == [] and sovp1 == [] and sovp2 == []:
+                        m_ng1.append(min(merge_ng1[i], ng1[j]))
+                        m_vg1.append(max(merge_vg1[i], vg1[j]))
+                        m_val1.append(v1)
+                        m_ng2.append(min(merge_ng2[i], ng2[j]))
+                        m_vg2.append(max(merge_vg2[i], vg2[j]))
+                        m_val2.append(v2)
+                        m_ng3.append(min(merge_ng3[i], ng3[j]))
+                        m_vg3.append(max(merge_vg3[i], vg3[j]))
+                        m_val3.append(v3)
+                        m_ng4.append(min(merge_ng4[i], ng4[j]))
+                        m_vg4.append(max(merge_vg4[i], vg4[j]))
+                        m_val4.append(v4)
+                        n = j + 1
+                        flag = True
+                else:
+                    n = j
+                    break
+
+        count = n
+        if flag == True:
+            merge_ng1 = m_ng1
+            merge_vg1 = m_vg1
+            merge_val1 = m_val1
+            merge_ng2 = m_ng2
+            merge_vg2 = m_vg2
+            merge_val2 = m_val2
+            merge_ng3 = m_ng3
+            merge_vg3 = m_vg3
+            merge_val3 = m_val3
+            merge_ng4 = m_ng4
+            merge_vg4 = m_vg4
+            merge_val4 = m_val4
+
+    if len(id) != 1:
+        ng1 = merge_ng1[0]
+        vg1 = merge_vg1[0]
+        val1 = merge_val1[0]
+        ng2 = merge_ng2[0]
+        vg2 = merge_vg2[0]
+        val2 = merge_val2[0]
+        ng3 = merge_ng3[0]
+        vg3 = merge_vg3[0]
+        val3 = merge_val3[0]
+        ng4 = merge_ng4[0]
+        vg4 = merge_vg4[0]
+        val4 = merge_val4[0]
+
+        val1 = list(set(val1))
+        val2 = list(set(val2))
+        val3 = list(set(val3))
+        val4 = list(set(val4))
+
+        val1 = sorted(val1)
+        val2 = sorted(val2)
+        val4 = sorted(val4)
+
+        sovp = [x for x in val1 if x in val2]
+        sovp1 = [x for x in val3 if x in val2]
+        sovp2 = [x for x in val3 if x in val4]
+
+        if sovp != [] or sovp1 != [] or sovp2 != []:
+            id = []
+        else:
+            id = [1]
+
+        if len(id) != 0:
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 1, str(val1).strip('[]'), ng1, vg1 ))
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 2, str(val2).strip('[]'),  ng2, vg2))
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 3, str(val3).strip('[]'), ng3, vg3))
+            conn1.commit()
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 4, str(val4).strip('[]'), ng4, vg4))
+            conn1.commit()
+
+def five(class_name, feature_name, i, n1,v1, va1, n2, v2, va2, n3, v3, va3, n4, v4, va4, n5, v5, va5):
+
+    conn1 = sqlite3.connect('ifbz.db')
+    cur1 = conn1.cursor()
+
+    id = i.copy()
+    ng1 = n1.copy()
+    vg1 = v1.copy()
+    val1 = va1.copy()
+    ng2 = n2.copy()
+    vg2 = v2.copy()
+    val2 = va2.copy()
+    ng3 = n3.copy()
+    vg3 = v3.copy()
+    val3 = va3.copy()
+    ng4 = n4.copy()
+    vg4 = v4.copy()
+    val4 = va4.copy()
+    ng5 = n5.copy()
+    vg5 = v5.copy()
+    val5 = va5.copy()
+
+    merge_id = []
+    merge_id.append(id[0])
+    merge_ng1 = []
+    merge_vg1 = []
+    merge_val1 = []
+    merge_ng2 = []
+    merge_vg2 = []
+    merge_val2 = []
+    merge_ng3 = []
+    merge_vg3 = []
+    merge_val3 = []
+    merge_ng4 = []
+    merge_vg4 = []
+    merge_val4 = []
+    merge_ng5 = []
+    merge_vg5 = []
+    merge_val5 = []
+    count = 0
+
+    for i in range(0, len(id)):
+
+        if id[i] == merge_id[0]:
+            merge_ng1.append(ng1[i])
+            merge_vg1.append(vg1[i])
+            merge_val1.append(val1[i])
+            merge_ng2.append(ng2[i])
+            merge_vg2.append(vg2[i])
+            merge_val2.append(val2[i])
+            merge_ng3.append(ng3[i])
+            merge_vg3.append(vg3[i])
+            merge_val3.append(val3[i])
+            merge_ng4.append(ng4[i])
+            merge_vg4.append(vg4[i])
+            merge_val4.append(val4[i])
+            merge_ng5.append(ng5[i])
+            merge_vg5.append(vg5[i])
+            merge_val5.append(val5[i])
+        else:
+            count = i
+            break
+
+    if len(id) != 1:
+        flag = True
+    else:
+        flag = False
+
+    while flag:
+
+        flag = False
+        m_ng1 = []
+        m_vg1 = []
+        m_val1 = []
+        m_ng2 = []
+        m_vg2 = []
+        m_val2 = []
+        m_ng3 = []
+        m_vg3 = []
+        m_val3 = []
+        m_ng4 = []
+        m_vg4 = []
+        m_val4 = []
+        m_ng5 = []
+        m_vg5 = []
+        m_val5 = []
+        index = 0
+        n = 0
+
+        for i in range(0, len(merge_val1)):
+            for j in range(count, len(id)):
+                if j == count:
+                    index = id[j]
+                if id[j] == index:
+
+                    v1 = merge_val1[i].copy()
+                    v1.extend(val1[j])
+                    v2 = merge_val2[i].copy()
+                    v2.extend(val2[j])
+                    v3 = merge_val3[i].copy()
+                    v3.extend(val3[j])
+                    v4 = merge_val4[i].copy()
+                    v4.extend(val4[j])
+                    v5 = merge_val5[i].copy()
+                    v5.extend(val5[j])
+
+                    v1 = list(set(v1))
+                    v2 = list(set(v2))
+                    v3 = list(set(v3))
+                    v4 = list(set(v4))
+                    v5 = list(set(v5))
+
+                    v1.sort()
+                    v2.sort()
+                    v3.sort()
+                    v4.sort()
+                    v5.sort()
+
+                    sovp = [x for x in v1 if x in v2]
+                    sovp1 = [x for x in v3 if x in v2]
+                    sovp2 = [x for x in v3 if x in v4]
+                    sovp3 = [x for x in v5 if x in v4]
+
+
+                    if sovp == [] and sovp1 == [] and sovp2 == [] and sovp3 == []:
+                        m_ng1.append(min(merge_ng1[i], ng1[j]))
+                        m_vg1.append(max(merge_vg1[i], vg1[j]))
+                        m_val1.append(v1)
+                        m_ng2.append(min(merge_ng2[i], ng2[j]))
+                        m_vg2.append(max(merge_vg2[i], vg2[j]))
+                        m_val2.append(v2)
+                        m_ng3.append(min(merge_ng3[i], ng3[j]))
+                        m_vg3.append(max(merge_vg3[i], vg3[j]))
+                        m_val3.append(v3)
+                        m_ng4.append(min(merge_ng4[i], ng4[j]))
+                        m_vg4.append(max(merge_vg4[i], vg4[j]))
+                        m_val4.append(v4)
+                        m_ng5.append(min(merge_ng5[i], ng5[j]))
+                        m_vg5.append(max(merge_vg5[i], vg5[j]))
+                        m_val5.append(v5)
+                        n = j + 1
+                        flag = True
+                else:
+                    n = j
+                    break
+
+        count = n
+        if flag == True:
+            merge_ng1 = m_ng1
+            merge_vg1 = m_vg1
+            merge_val1 = m_val1
+            merge_ng2 = m_ng2
+            merge_vg2 = m_vg2
+            merge_val2 = m_val2
+            merge_ng3 = m_ng3
+            merge_vg3 = m_vg3
+            merge_val3 = m_val3
+            merge_ng4 = m_ng4
+            merge_vg4 = m_vg4
+            merge_val4 = m_val4
+            merge_ng5 = m_ng5
+            merge_vg5 = m_vg5
+            merge_val5 = m_val5
+
+    if len(id) != 1:
+        ng1 = merge_ng1[0]
+        vg1 = merge_vg1[0]
+        val1 = merge_val1[0]
+        ng2 = merge_ng2[0]
+        vg2 = merge_vg2[0]
+        val2 = merge_val2[0]
+        ng3 = merge_ng3[0]
+        vg3 = merge_vg3[0]
+        val3 = merge_val3[0]
+        ng4 = merge_ng4[0]
+        vg4 = merge_vg4[0]
+        val4 = merge_val4[0]
+        ng5 = merge_ng5[0]
+        vg5 = merge_vg5[0]
+        val5 = merge_val5[0]
+
+        val1 = list(set(val1))
+        val2 = list(set(val2))
+        val3 = list(set(val3))
+        val4 = list(set(val4))
+        val5 = list(set(val5))
+
+        val1 = sorted(val1)
+        val2 = sorted(val2)
+        val4 = sorted(val4)
+        val5 = sorted(val5)
+
+        sovp = [x for x in val1 if x in val2]
+        sovp1 = [x for x in val3 if x in val2]
+        sovp2 = [x for x in val3 if x in val4]
+        sovp3 = [x for x in val5 if x in val4]
+
+        if sovp != [] or sovp1 != [] or sovp2 != [] or sovp3 != []:
+            id = []
+        else:
+            id = [1]
+
+        if len(id) != 0:
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 1, str(val1).strip('[]'), ng1, vg1 ))
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 2, str(val2).strip('[]'),  ng2, vg2))
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 3, str(val3).strip('[]'), ng3, vg3))
+            conn1.commit()
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 4, str(val4).strip('[]'), ng4, vg4))
+            conn1.commit()
+            cur1.execute(
+                'INSERT INTO merge_(name_class, name_feature, count_periods,values_per, ng, vg_per) VALUES( ?, ?, ?, ?, ?, ?)',
+                (class_name, feature_name, 5, str(val5).strip('[]'), ng5, vg5))
+            conn1.commit()
 
 def merge_two_periods(count_ib, count_class, count_features):
     global conn
@@ -935,6 +1499,200 @@ def merge_two_periods(count_ib, count_class, count_features):
 
 
 
+def merge_three_periods(count_ib, count_class, count_features):
+    global conn
+    global cur
+
+    conn1 = sqlite3.connect('ifbz.db')
+    cur1 = conn1.cursor()
+
+    cur = conn.execute('SELECT * FROM borders')
+    rows = cur.fetchall()
+
+    for i in range(1, count_class + 1):
+        for j in range(1, count_features + 1):
+            count_per = 1
+            class_name = "class" + str(i)
+            feature_name = "feature" + str(j)
+            id = []
+            ng1 = []
+            vg1 = []
+            val1 = []
+
+            ng2 = []
+            vg2 = []
+            val2 = []
+
+            ng3 = []
+            vg3 = []
+            val3 = []
+            count = 0
+
+            for row in rows:
+                if row[1] == "class" + str(i) and row[2] == "feature" + str(j) and row[3] == 3:
+                    if count_per == 1:
+                        id.append(row[0])
+                        ng1.append(row[4])
+                        vg1.append(row[5])
+                        val1.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 2
+                    elif count_per == 2:
+                        ng2.append(row[4])
+                        vg2.append(row[5])
+                        val2.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 3
+                    else:
+                        ng3.append(row[4])
+                        vg3.append(row[5])
+                        val3.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 1
+
+
+            for k in range(1, len(id)):
+                if id[k] != id[k-1]:
+                    count += 1
+
+            if id != [] and count > (count_ib / count_class) // 2:
+                three("class" + str(i), "feature" + str(j), id, ng1, vg1, val1, ng2, vg2, val2, ng3, vg3, val3)
+
+def merge_four_periods(count_ib, count_class, count_features):
+    global conn
+    global cur
+
+    conn1 = sqlite3.connect('ifbz.db')
+    cur1 = conn1.cursor()
+
+    cur = conn.execute('SELECT * FROM borders')
+    rows = cur.fetchall()
+
+    for i in range(1, count_class + 1):
+        for j in range(1, count_features + 1):
+            count_per = 1
+            class_name = "class" + str(i)
+            feature_name = "feature" + str(j)
+            id = []
+            ng1 = []
+            vg1 = []
+            val1 = []
+
+            ng2 = []
+            vg2 = []
+            val2 = []
+
+            ng3 = []
+            vg3 = []
+            val3 = []
+
+            ng4 = []
+            vg4 = []
+            val4 = []
+            count = 0
+
+            for row in rows:
+                if row[1] == "class" + str(i) and row[2] == "feature" + str(j) and row[3] == 4:
+                    if count_per == 1:
+                        id.append(row[0])
+                        ng1.append(row[4])
+                        vg1.append(row[5])
+                        val1.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 2
+                    elif count_per == 2:
+                        ng2.append(row[4])
+                        vg2.append(row[5])
+                        val2.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 3
+                    elif count_per == 3:
+                        ng3.append(row[4])
+                        vg3.append(row[5])
+                        val3.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 4
+                    else:
+                        ng4.append(row[4])
+                        vg4.append(row[5])
+                        val4.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 1
+
+
+            for k in range(1, len(id)):
+                if id[k] != id[k-1]:
+                    count += 1
+
+            if id != [] and count > (count_ib / count_class) // 2:
+                four("class" + str(i), "feature" + str(j), id, ng1, vg1, val1, ng2, vg2, val2, ng3, vg3, val3, ng4, vg4, val4)
+
+def merge_five_periods(count_ib, count_class, count_features):
+    global conn
+    global cur
+
+    conn1 = sqlite3.connect('ifbz.db')
+    cur1 = conn1.cursor()
+
+    cur = conn.execute('SELECT * FROM borders')
+    rows = cur.fetchall()
+
+    for i in range(1, count_class + 1):
+        for j in range(1, count_features + 1):
+            count_per = 1
+            class_name = "class" + str(i)
+            feature_name = "feature" + str(j)
+            id = []
+            ng1 = []
+            vg1 = []
+            val1 = []
+
+            ng2 = []
+            vg2 = []
+            val2 = []
+
+            ng3 = []
+            vg3 = []
+            val3 = []
+
+            ng4 = []
+            vg4 = []
+            val4 = []
+
+            ng5 = []
+            vg5 = []
+            val5 = []
+            count = 0
+
+            for row in rows:
+                if row[1] == "class" + str(i) and row[2] == "feature" + str(j) and row[3] == 5:
+                    if count_per == 1:
+                        id.append(row[0])
+                        ng1.append(row[4])
+                        vg1.append(row[5])
+                        val1.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 2
+                    elif count_per == 2:
+                        ng2.append(row[4])
+                        vg2.append(row[5])
+                        val2.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 3
+                    elif count_per == 3:
+                        ng3.append(row[4])
+                        vg3.append(row[5])
+                        val3.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 4
+                    elif count_per == 4:
+                        ng4.append(row[4])
+                        vg4.append(row[5])
+                        val4.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 5
+                    else:
+                        ng5.append(row[4])
+                        vg5.append(row[5])
+                        val5.append(literal_eval("[" + row[6] + "]"))
+                        count_per = 1
+
+
+            for k in range(1, len(id)):
+                if id[k] != id[k-1]:
+                    count += 1
+
+            if id != [] and count > (count_ib / count_class) // 2:
+                five("class" + str(i), "feature" + str(j), id, ng1, vg1, val1, ng2, vg2, val2, ng3, vg3, val3, ng4, vg4, val4, ng5, vg5, val5)
 
 
 
@@ -971,13 +1729,16 @@ def merge():
 
     merge_one_periods(count_ib, count_class, count_features)
     merge_two_periods(count_ib, count_class, count_features)
+    merge_three_periods(count_ib, count_class, count_features)
+    merge_four_periods(count_ib, count_class, count_features)
+    merge_five_periods(count_ib, count_class, count_features)
 
     cur.execute("SELECT * FROM merge_")
     data = (row for row in cur.fetchall())
 
     global w
     w = 120
-    table = Table(root, headings=('Класс', 'Признак', '№ периода', 'ЗДП', 'НГ', 'ВГ'), rows=data)
+    table = Table(root, headings=('Класс', 'Признак', 'ПД', 'ЗДП', 'НГ', 'ВГ'), rows=data)
     table.grid(row=4, column=0, columnspan=7, pady=5)
 
 def create_final():
@@ -1070,7 +1831,7 @@ def create_final():
 
     global w
     w = 120
-    table = Table(root, headings=('Класс', 'Признак', '№ периода', 'ЗДП', 'НГ', 'ВГ'), rows=data)
+    table = Table(root, headings=('Класс', 'Признак', 'ПД', 'ЗДП', 'НГ', 'ВГ'), rows=data)
     table.grid(row=6, column=0, columnspan=7, pady=5)
 
 
@@ -1108,6 +1869,6 @@ def click_FIBZ():
 
 b_fibz = Button(root, text = "Сформировать", bg = "white", command = click_FIBZ)
 
-b_fibz.grid(row = 0, column=3, padx = 600)
+b_fibz.grid(row = 0, column=0, padx = 300)
 
 root.mainloop()
